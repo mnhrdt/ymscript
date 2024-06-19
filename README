@@ -1,0 +1,44 @@
+YMSCRIPT: PYTHON+NUMPY REIMPLEMENTATION OF SOME IMSCRIPT FUNCTIONS
+==================================================================
+
+Just some handy functions from imscript implemented in python+numpy,
+with similar semantics.
+
+
+DOCUMENTATION
+-------------
+
+Install with "pip install ymscript"
+
+- qauto : quantize an image to 8 bits
+- sauto : quantize and apply a signed palette
+- vauto : quantize a vector field to rgb
+- lap,grad,div : differential operators
+- ntiply : enlarge pixels by an integer factor
+- blur : blur by various kernels (gauss,cauchy,laplace,riesz,disk,square)
+- laplace : smooth interpolation
+- poisson : poisson editing
+
+There are no explicit requirements, but most functions require numpy or some
+numpy-mocking arrays.  The requirements are "soft".  The package will install
+correctly no matter what, but some functions will fail at runtime if their
+requirements are n ot satisfied.
+
+The differential operators require imgra.
+
+The blur requires numpy.fft
+
+Poisson editing requires imgra and scipy.linalg
+
+
+RELEASING
+---------
+
+To update the pypi hub, you need an account on pypi, and then run the following
+commands:
+
+        # update version number on file setup.py
+        # update version number on file ymscript.py
+	python setup.py sdist bdist_wheel
+	python -m twine upload dist/ymscript-X.tar.gz
+	rm -rf build dist pystab.egg-info
