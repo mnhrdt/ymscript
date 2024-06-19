@@ -12,6 +12,47 @@ def sauto(x, q=0.995):
 	c = (255*c).astype(int)        # rescale and quantize
 	return c
 
+
+def qauto(x, q=0.995, i=True, n=True):
+	"""
+	quantize a floating-point image to 8 bits per channel
+
+	Args:
+		x: input image
+		q: saturation quantile (default q=0.995)
+		i: whether to treat all channels independently (default=True)
+		n: whether to paint NaNs in blue (default=True)
+
+	Returns:
+		a 8-bit image (rgb if n=True, otherwise grayscale)
+
+	"""
+	if i and len(x.shape)==3 and x.shape[2]>1:
+		from numpy import dstack
+		return dstack([
+			qauto(x[:,:,c], q, i=False, n=False)
+			for c in range(x.shape[2])
+			])
+	from numpy import nanquantile, clip, uint8
+	s = nanquantile(x, 1-q)          # lower saturation quantile
+	S = nanquantile(x, q)            # upper saturation quantile
+	y = clip((x - s)/(S - s), 0, 1)  # saturate values to [0,1]
+	if n and (len(y.shape)==2 or (len(y.shape)==3 and y.shape[2]==1)):
+		from numpy import isnan, dstack
+		r = 1 * y
+		g = 1 * y
+		b = 1 * y
+		r[isnan(x)] = 0
+		g[isnan(x)] = 0
+		b[isnan(x)] = 0.4
+		y = dstack([r, g, b])
+	else:
+		from numpy import nan_to_num
+		y = nan_to_num(y, nan=0.5) # set nans to middle gray
+	y = (255*y).astype(uint8)          # rescale and quantize
+	return y
+
+
 def laplacian(x):
 	""" Compute the five-point laplacian of an image """
 	import imgra                  # image processing with graphs
@@ -20,6 +61,7 @@ def laplacian(x):
 	L = -B.T @ B                  # laplacian operator
 	y = L @ x.flatten()           # laplacian of flattened data
 	return y.reshape(*s)          # reshape and return
+
 
 def blur_gaussian(x, σ):
 	""" Gaussian blur of an image """
@@ -35,6 +77,6 @@ def blur_gaussian(x, σ):
 
 
 # API
-version = 1
+version = 2
 
-__all__ = [ "sauto", "laplacian", "blur_gaussian" ]
+__all__ = [ "sauto", "qauto", "laplacian", "blur_gaussian" ]
