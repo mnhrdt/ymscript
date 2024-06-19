@@ -32,3 +32,9 @@ def blur_gaussian(x, σ):
 	Y = F*X                                 # apply filter
 	y = ifft2(Y).real                       # go back to spatial domain
 	return y
+
+
+# API
+version = 1
+
+__all__ = [ "sauto", "laplacian", "blur_gaussian" ]
