@@ -75,8 +75,62 @@ def blur_gaussian(x, σ):
 	y = ifft2(Y).real                       # go back to spatial domain
 	return y
 
+#def blur_laplace(x, σ):
+#	""" Laplacian blur of an image """
+#	from numpy.fft import fft2, ifft2, fftfreq
+#	from numpy import meshgrid, exp
+#	h,w = x.shape                           # shape of the rectangle
+#	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+#	X = fft2(x)                             # move to frequency domain
+#	F = exp(-σ**2 * (p**2 + q**2))          # define filter
+#	Y = F*X                                 # apply filter
+#	y = ifft2(Y).real                       # go back to spatial domain
+#	return y
+
+def blur_riesz(x, σ):
+	""" Riesz blur of an image """
+	from numpy.fft import fft2, ifft2, fftfreq
+	from numpy import meshgrid, exp
+	h,w = x.shape                           # shape of the rectangle
+	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+	X = fft2(x)                             # move to frequency domain
+	F = exp(-σ**2 * (p**2 + q**2))          # define filter
+	Y = F*X                                 # apply filter
+	y = ifft2(Y).real                       # go back to spatial domain
+	return y
+
+def __build_kernel_freq(s, σ, p, q):
+	if s[0] == "g": return exp(-σ**2 * (p**2 + q**2))
+	if s[0] == "c": return exp(-σ**2 * (p**2 + q**2))
+	if s[0] == "l": return exp(-σ**2 * (p**2 + q**2))
+	if s[0] == "r": return exp(-σ**2 * (p**2 + q**2))
+
+def blur(x, s, σ, b="periodic"):
+	""" Blur an image by the given kernel
+
+	Args:
+		x: input image
+		s: name of the kernel ("gauss", "riesz", "cauchy", "disk", ...)
+		σ: size parameter of the kernel (e.g. variance, radius, ...)
+		b: boundary condition (default="periodic")
+
+	Returns:
+		an image of the same shape as x
+
+	"""
+
+	from numpy.fft import fft2, ifft2, fftfreq
+	from numpy import meshgrid
+	h,w = x.shape                           # shape of the rectangle
+	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+	X = fft2(x)                             # move to frequency domain
+	F = __build_kernel_freq(s, σ, p, q)     # filter in frequency domain
+	Y = F*X                                 # apply filter
+	y = ifft2(Y).real                       # go back to spatial domain
+	return y
+
 
 # API
-version = 2
+version = 3
 
 __all__ = [ "sauto", "qauto", "laplacian", "blur_gaussian" ]
