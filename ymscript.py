@@ -1,3 +1,9 @@
+def ntiply(x, n=4):
+	""" zoom-in an image by pixel replication """
+	y = x.repeat(n,axis=0).repeat(n,axis=1)
+	return y
+
+
 # function to show a signed image with red-white-blue palette
 def sauto(x, q=0.995):
 	""" RGB rendering of a signed scalar image using a divergent palette """
@@ -206,10 +212,17 @@ if __name__ == "__main__":
 		  x = x[:,:,0]
 		y = sauto(x, q)
 		iio.write(o, y)
+	if len(v) > 1 and v[1] == "ntiply":
+		i = pick_option("-i", "-")
+		o = pick_option("-o", "-")
+		q = pick_option("-n", 4)
+		x = iio.read(i)
+		y = ntiply(x, q)
+		iio.write(o, y)
 
 
 
 # API
-version = 4
+version = 5
 
-__all__ = [ "sauto", "qauto", "laplacian", "blur" ]
+__all__ = [ "sauto", "qauto", "laplacian", "blur", "ntiply" ]

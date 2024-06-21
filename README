@@ -41,4 +41,4 @@ commands:
         # update version number on file ymscript.py
 	python setup.py sdist bdist_wheel
 	python -m twine upload dist/ymscript-X.tar.gz
-	rm -rf build dist pystab.egg-info
+	rm -rf build dist ymscript.egg-info
