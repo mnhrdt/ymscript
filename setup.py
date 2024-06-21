@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
 	name = "ymscript",
-	version = "2",
+	version = "4",
 	description = "Image Processing Scripts",
 	url="https://git.sr.ht/~coco/ymscript",
 	classifiers = [
