@@ -158,12 +158,20 @@ def blur(x, k, σ, b="periodic"):
 
 	"""
 
+	# for multidimensional pixels, blur each channel separately
 	if len(x.shape)==3:
 		from numpy import dstack as d
 		return d([ blur(x[:,:,c],k,σ,b) for c in range(x.shape[2]) ])
+
+	# apply boundary condition in the case d=1
+	from numpy import pad
+	h,w = x.shape                           # shape of the rectangle
+	if b == "zero": b = "constant"
+	if b[0]!="p": return blur(pad(x,((0,w),(0,h)),mode=b),k,σ,b="p")[:h,:w]
+
+	# base case with d=1 and periodic boundary
 	from numpy.fft import fft2, ifft2, fftfreq
 	from numpy import meshgrid
-	h,w = x.shape                           # shape of the rectangle
 	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
 	X = fft2(x)                             # move to frequency domain
 	F = __build_kernel_freq(k, σ, p, q)     # filter in frequency domain
@@ -223,6 +231,6 @@ if __name__ == "__main__":
 
 
 # API
-version = 5
+version = 6
 
 __all__ = [ "sauto", "qauto", "laplacian", "blur", "ntiply" ]
