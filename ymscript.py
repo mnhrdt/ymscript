@@ -71,6 +71,60 @@ def laplacian(x):
 	y = L @ x.flatten()           # laplacian of flattened data
 	return y.reshape(*s)          # reshape and return
 
+def viewdft(x):
+	""" display the DFT of an image in an intuitive way """
+
+	if len(x.shape)==3:
+		from numpy import dstack as d
+		return d([ viewdft(x[:,:,c]) for c in range(x.shape[2]) ])
+
+	from numpy import abs, log
+	from numpy.fft import fft2, fftshift
+	X = fft2(x)
+	v = qauto(log(1+abs(fftshift(X))))[:,:,0]
+	return v
+
+
+
+
+def ppsmooth(I):
+	""" Compute the periodic+smooth decomposition of an image """
+	# NOTE: implementation by Jacob Kimmel of Moisan's algorithm
+	# https://github.com/jacobkimmel/ps_decomp
+
+	if len(I.shape)==3:
+		from numpy import dstack as d
+		return d([ ppsmooth(I[:,:,c]) for c in range(I.shape[2]) ])
+
+	def v2s(V):
+		from numpy import arange, cos, divide, zeros_like
+		from numpy import pi as π
+		M, N = V.shape
+		q = arange(M).reshape(M, 1).astype(V.dtype)
+		r = arange(N).reshape(1, N).astype(V.dtype)
+		d = (2*cos( divide(2*π*q, M) ) + 2*cos( divide(2*π*r, N) ) - 4)
+		s = divide(V, d, out=zeros_like(V), where=d!=0)
+		s[0, 0] = 0
+		return s
+
+	def u2v(u):
+		from numpy import zeros, subtract
+		v = zeros(u.shape)
+		v[0, :] = subtract(u[-1, :], u[0,  :])
+		v[-1,:] = subtract(u[0,  :], u[-1, :])
+		v[:,  0] += subtract(u[:, -1], u[:,  0])
+		v[:, -1] += subtract(u[:,  0], u[:, -1])
+		return v
+
+	from numpy.fft import fft2, ifft2
+	u = I
+	v = u2v(I)
+	V = fft2(v)
+	S = v2s(V)
+	s = ifft2(S).real
+	p = u - s
+	return p #, s
+
 
 #def blur_gaussian(x, σ):
 #	""" Gaussian blur of an image """
@@ -217,7 +271,7 @@ if __name__ == "__main__":
 		q = pick_option("-q", 0.995)
 		x = iio.read(i).squeeze()
 		if len(x.shape)==3:
-		  x = x[:,:,0]
+			x = x[:,:,0]
 		y = sauto(x, q)
 		iio.write(o, y)
 	if len(v) > 1 and v[1] == "ntiply":
@@ -227,10 +281,16 @@ if __name__ == "__main__":
 		x = iio.read(i)
 		y = ntiply(x, q)
 		iio.write(o, y)
+	if len(v) > 1 and v[1] == "ppsmooth":
+		i = pick_option("-i", "-")
+		o = pick_option("-o", "-")
+		x = iio.read(i)
+		y = ppsmooth(x)
+		iio.write(o, y)
 
 
 
 # API
-version = 6
+version = 7
 
-__all__ = [ "sauto", "qauto", "laplacian", "blur", "ntiply" ]
+__all__ = [ "sauto", "qauto", "laplacian", "blur", "ntiply", "ppsmooth" ]
