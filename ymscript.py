@@ -86,9 +86,21 @@ def gradient(x):
 	G[:h-1,:w,1] = g[h*(w-1):].reshape(h-1,w)
 	return G
 
-# TODO:
-#def divergence(x):
-#	""" Compute the gradient by backward-differences """
+
+
+def divergence(x):
+	""" Compute the divergence by backward-differences """
+	if len(x.shape) != 3 or x.shape[2] != 2:
+		# TODO: divide in groups of two dimensions and call recursively
+		exit(43)
+	h,w,_ = x.shape
+	import imgra
+	B = imgra.grid_incidence(h,w)
+	f = x[:,:-1,0].flatten()
+	g = x[:-1,:,1].flatten()
+	from numpy import hstack
+	return ( B.T @ hstack([-f,-g]) ).reshape(h,w)
+
 
 
 def viewdft(x):
@@ -254,14 +266,22 @@ def blur(x, k, σ, b="periodic"):
 	return y
 
 
+# visible API
+__all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
+	   "blur", "ntiply", "ppsmooth" ]
+
+
 # cli interfaces to the above functions
 if __name__ == "__main__":
 	from sys import argv as v
 	def pick_option(o, d):
 		r = type(d)(v[v.index(o)+1]) if o in v else d
 		return r
+	if len(v) < 2:
+		print(f"usage:\n\tymscript {{{'|'.join(__all__)}}}")
+		exit(0)
 	import iio
-	if len(v) > 1 and v[1] == "blur":
+	if "blur" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		k = pick_option("-k", "gaussian")
@@ -270,19 +290,25 @@ if __name__ == "__main__":
 		x = iio.read(i)
 		y = blur(x, k, s, b)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "laplacian":
+	if "laplacian" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		x = iio.read(i)
 		y = laplacian(x)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "gradient":
+	if "gradient" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		x = iio.read(i)
 		y = gradient(x)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "qauto":
+	if "divergence" == v[1]:
+		i = pick_option("-i", "-")
+		o = pick_option("-o", "-")
+		x = iio.read(i)
+		y = divergence(x)
+		iio.write(o, y)
+	if "qauto" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		q = pick_option("-q", 0.995)
@@ -291,7 +317,7 @@ if __name__ == "__main__":
 		x = iio.read(i)
 		y = qauto(x, q, s, n)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "sauto":
+	if "sauto" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		q = pick_option("-q", 0.995)
@@ -300,14 +326,14 @@ if __name__ == "__main__":
 			x = x[:,:,0]
 		y = sauto(x, q)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "ntiply":
+	if "ntiply" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		q = pick_option("-n", 4)
 		x = iio.read(i)
 		y = ntiply(x, q)
 		iio.write(o, y)
-	if len(v) > 1 and v[1] == "ppsmooth":
+	if "ppsmooth" == v[1]:
 		i = pick_option("-i", "-")
 		o = pick_option("-o", "-")
 		x = iio.read(i)
@@ -317,7 +343,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 8
-
-__all__ = [ "sauto", "qauto", "laplacian", "gradient",
-	   "blur", "ntiply", "ppsmooth" ]
+version = 9
