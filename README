@@ -22,7 +22,7 @@ Install with "pip install ymscript"
 There are no explicit requirements, but most functions require numpy or some
 numpy-mocking arrays.  The requirements are "soft".  The package will install
 correctly no matter what, but some functions will fail at runtime if their
-requirements are n ot satisfied.
+requirements are not satisfied.
 
 The differential operators require imgra.
 
@@ -39,6 +39,6 @@ commands:
 
         # update version number on file setup.py
         # update version number on file ymscript.py
-	python setup.py sdist bdist_wheel
+	python -m build
 	python -m twine upload dist/ymscript-X.tar.gz
 	rm -rf build dist ymscript.egg-info
