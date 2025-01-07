@@ -71,6 +71,26 @@ def laplacian(x):
 	y = L @ x.flatten()           # laplacian of flattened data
 	return y.reshape(*s)          # reshape and return
 
+
+def gradient(x):
+	""" Compute the gradient by forward-differences """
+	if len(x.shape)==3:
+		from numpy import dstack as d
+		return d([ gradient(x[:,:,c]) for c in range(x.shape[2]) ])
+	import imgra                   # image processing with graphs
+	h,w = x.shape                  # shape of the domain
+	B = imgra.grid_incidence(h,w)  # discrete gradient operator
+	g = B @ x.flatten()            # gradient of flattened data
+	G = 0 * x[:,:,None].repeat(2,axis=2)
+	G[:h,:w-1,0] = g[:h*(w-1)].reshape(h,w-1)
+	G[:h-1,:w,1] = g[h*(w-1):].reshape(h-1,w)
+	return G
+
+# TODO:
+#def divergence(x):
+#	""" Compute the gradient by backward-differences """
+
+
 def viewdft(x):
 	""" display the DFT of an image in an intuitive way """
 
@@ -97,23 +117,22 @@ def ppsmooth(I):
 		return d([ ppsmooth(I[:,:,c]) for c in range(I.shape[2]) ])
 
 	def v2s(V):
-		from numpy import arange, cos, divide, zeros_like
-		from numpy import pi as π
+		from numpy import pi as π, arange, cos, errstate
 		M, N = V.shape
 		q = arange(M).reshape(M, 1).astype(V.dtype)
 		r = arange(N).reshape(1, N).astype(V.dtype)
-		d = (2*cos( divide(2*π*q, M) ) + 2*cos( divide(2*π*r, N) ) - 4)
-		s = divide(V, d, out=zeros_like(V), where=d!=0)
+		d = (2*cos(2*π*q/M) + 2*cos(2*π*r/N) - 4)
+		with errstate(all="ignore"):
+			s = V / d
 		s[0, 0] = 0
 		return s
 
 	def u2v(u):
-		from numpy import zeros, subtract
-		v = zeros(u.shape)
-		v[0, :] = subtract(u[-1, :], u[0,  :])
-		v[-1,:] = subtract(u[0,  :], u[-1, :])
-		v[:,  0] += subtract(u[:, -1], u[:,  0])
-		v[:, -1] += subtract(u[:,  0], u[:, -1])
+		v = 0 * u
+		v[ 0, :]  = u[-1, :] - u[ 0, :]
+		v[-1, :]  = u[ 0, :] - u[-1, :]
+		v[ :, 0] += u[ :,-1] - u[ :, 0]
+		v[ :,-1] += u[ :, 0] - u[ :,-1]
 		return v
 
 	from numpy.fft import fft2, ifft2
@@ -218,10 +237,11 @@ def blur(x, k, σ, b="periodic"):
 		return d([ blur(x[:,:,c],k,σ,b) for c in range(x.shape[2]) ])
 
 	# apply boundary condition in the case d=1
-	from numpy import pad
 	h,w = x.shape                           # shape of the rectangle
 	if b == "zero": b = "constant"
-	if b[0]!="p": return blur(pad(x,((0,w),(0,h)),mode=b),k,σ,b="p")[:h,:w]
+	if b[0] != "p":
+		from numpy import pad
+		return blur(pad(x,((0,w),(0,h)),mode=b),k,σ,b="p")[:h,:w]
 
 	# base case with d=1 and periodic boundary
 	from numpy.fft import fft2, ifft2, fftfreq
@@ -255,6 +275,12 @@ if __name__ == "__main__":
 		o = pick_option("-o", "-")
 		x = iio.read(i)
 		y = laplacian(x)
+		iio.write(o, y)
+	if len(v) > 1 and v[1] == "gradient":
+		i = pick_option("-i", "-")
+		o = pick_option("-o", "-")
+		x = iio.read(i)
+		y = gradient(x)
 		iio.write(o, y)
 	if len(v) > 1 and v[1] == "qauto":
 		i = pick_option("-i", "-")
@@ -291,6 +317,7 @@ if __name__ == "__main__":
 
 
 # API
-version = 7
+version = 8
 
-__all__ = [ "sauto", "qauto", "laplacian", "blur", "ntiply", "ppsmooth" ]
+__all__ = [ "sauto", "qauto", "laplacian", "gradient",
+	   "blur", "ntiply", "ppsmooth" ]
