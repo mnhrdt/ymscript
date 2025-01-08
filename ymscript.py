@@ -86,18 +86,13 @@ def gradient(x):
 	G[:h-1,:w,1] = g[h*(w-1):].reshape(h-1,w)
 	return G
 
-def eprint(*a):
-	import sys
-	print(*a, file=sys.stderr)
-
 
 def divergence(x):
 	""" Compute the divergence by backward-differences """
-	eprint(f"div x.shape = {x.shape}")
 	if x.shape[2] != 2:
-		# TODO: divide in groups of two dimensions and call recursively
 		from numpy import dstack
-		return dstack([ divergence(x[:,:,2*c:2*c+2]) for c in range(x.shape[2]//2) ])
+		return dstack([ divergence(x[:,:,2*c:2*c+2])
+		                for c in range(x.shape[2]//2) ])
 	assert 2 == x.shape[2]
 	h,w,_ = x.shape
 	import imgra
@@ -270,6 +265,7 @@ def blur(x, k, σ, b="periodic"):
 	Y = F*X                                 # apply filter
 	y = ifft2(Y).real                       # go back to spatial domain
 	return y
+
 
 def plambda(x, e):
 	""" Apply an expression to an image """
