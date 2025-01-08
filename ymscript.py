@@ -322,12 +322,10 @@ if __name__ == "__main__":
 		y = ppsmooth(x)
 	if "plambda" == v[1]:
 		e = pick_option(2, "x")
-		import sys
-		print(f"e={e}", file=sys.stderr)
 		y = plambda(x, e)
 	iio.write(o, y)
 
 
 
 # API
-version = 9
+version = 10
