@@ -284,8 +284,8 @@ __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 if __name__ == "__main__":
 	from sys import argv as v
 	def pick_option(o, d):
-		r = type(d)(v[v.index(o)+1]) if o in v else d
-		return r
+		if int == type(o): return v[o]
+		return type(d)(v[v.index(o)+1]) if o in v else d
 	if len(v) < 2 or v[1] not in __all__:
 		print(f"usage:\n\tymscript {{{'|'.join(__all__)}}}")
 		exit(0)
@@ -321,7 +321,9 @@ if __name__ == "__main__":
 	if "ppsmooth" == v[1]:
 		y = ppsmooth(x)
 	if "plambda" == v[1]:
-		e = pick_option("-e", "x")
+		e = pick_option(2, "x")
+		import sys
+		print(f"e={e}", file=sys.stderr)
 		y = plambda(x, e)
 	iio.write(o, y)
 
