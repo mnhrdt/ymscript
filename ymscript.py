@@ -86,13 +86,19 @@ def gradient(x):
 	G[:h-1,:w,1] = g[h*(w-1):].reshape(h-1,w)
 	return G
 
+def eprint(*a):
+	import sys
+	print(*a, file=sys.stderr)
 
 
 def divergence(x):
 	""" Compute the divergence by backward-differences """
-	if len(x.shape) != 3 or x.shape[2] != 2:
+	eprint(f"div x.shape = {x.shape}")
+	if x.shape[2] != 2:
 		# TODO: divide in groups of two dimensions and call recursively
-		exit(43)
+		from numpy import dstack
+		return dstack([ divergence(x[:,:,2*c:2*c+2]) for c in range(x.shape[2]//2) ])
+	assert 2 == x.shape[2]
 	h,w,_ = x.shape
 	import imgra
 	B = imgra.grid_incidence(h,w)
@@ -149,7 +155,7 @@ def ppsmooth(I):
 
 	from numpy.fft import fft2, ifft2
 	u = I
-	v = u2v(I)
+	v = u2v(u)
 	V = fft2(v)
 	S = v2s(V)
 	s = ifft2(S).real
@@ -265,10 +271,17 @@ def blur(x, k, σ, b="periodic"):
 	y = ifft2(Y).real                       # go back to spatial domain
 	return y
 
+def plambda(x, e):
+	""" Apply an expression to an image """
+	exec(f"def f(x): return {e}", globals())
+	from numpy import vectorize as v
+	return v(f)(x)
+
+
 
 # visible API
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
-	   "blur", "ntiply", "ppsmooth" ]
+	   "blur", "ntiply", "ppsmooth", "plambda" ]
 
 
 # cli interfaces to the above functions
@@ -277,68 +290,44 @@ if __name__ == "__main__":
 	def pick_option(o, d):
 		r = type(d)(v[v.index(o)+1]) if o in v else d
 		return r
-	if len(v) < 2:
+	if len(v) < 2 or v[1] not in __all__:
 		print(f"usage:\n\tymscript {{{'|'.join(__all__)}}}")
 		exit(0)
 	import iio
+	i = pick_option("-i", "-")
+	o = pick_option("-o", "-")
+	x = iio.read(i)
 	if "blur" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
 		k = pick_option("-k", "gaussian")
 		s = pick_option("-s", 3.0)
 		b = pick_option("-b", "periodic")
-		x = iio.read(i)
 		y = blur(x, k, s, b)
-		iio.write(o, y)
 	if "laplacian" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
-		x = iio.read(i)
 		y = laplacian(x)
-		iio.write(o, y)
 	if "gradient" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
-		x = iio.read(i)
 		y = gradient(x)
-		iio.write(o, y)
 	if "divergence" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
-		x = iio.read(i)
 		y = divergence(x)
-		iio.write(o, y)
 	if "qauto" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
 		q = pick_option("-q", 0.995)
 		s = pick_option("-s", True)
 		n = pick_option("-n", True)
-		x = iio.read(i)
 		y = qauto(x, q, s, n)
-		iio.write(o, y)
 	if "sauto" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
 		q = pick_option("-q", 0.995)
-		x = iio.read(i).squeeze()
+		x = x.squeeze()
 		if len(x.shape)==3:
 			x = x[:,:,0]
 		y = sauto(x, q)
-		iio.write(o, y)
 	if "ntiply" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
 		q = pick_option("-n", 4)
-		x = iio.read(i)
 		y = ntiply(x, q)
-		iio.write(o, y)
 	if "ppsmooth" == v[1]:
-		i = pick_option("-i", "-")
-		o = pick_option("-o", "-")
-		x = iio.read(i)
 		y = ppsmooth(x)
-		iio.write(o, y)
+	if "plambda" == v[1]:
+		e = pick_option("-e", "x")
+		y = plambda(x, e)
+	iio.write(o, y)
 
 
 
