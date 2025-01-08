@@ -1,0 +1,21 @@
+#!/usr/bin/python
+
+def plambda(x, e):
+	exec(f"def f(x): return {e}", globals())
+	from numpy import vectorize as v
+	return v(f)(x)
+
+if __name__ == "__main__":
+	from sys import argv as v
+	def pick_option(o, d):
+		if int == type(o): return v[o]
+		return type(d)(v[v.index(o)+1]) if o in v else d
+
+	i = pick_option("-i", "-")
+	o = pick_option("-o", "-")
+	e = pick_option(1, "x")
+
+	import iio
+	x = iio.read(i)
+	y = plambda(x, e)
+	iio.write(o, y)
