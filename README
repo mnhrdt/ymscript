@@ -40,5 +40,5 @@ commands:
         # update version number on file setup.py
         # update version number on file ymscript.py
 	python -m build
-	python -m twine upload dist/ymscript-X.tar.gz
+	python -m twine upload dist/ymscript-X-py3-none-any.whl
 	rm -rf build dist ymscript.egg-info
