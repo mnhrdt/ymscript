@@ -1,0 +1,12 @@
+#!/usr/bin/python
+
+def plambda(x, e):
+	exec(f"def f(x): return {e}", globals())
+	return f(x)
+
+if __name__ == "__main__":
+	from sys import argv as v
+	import iio
+	x = [ iio.read(v[i+1]) for i in range(len(v)-2) ]
+	y = plambda(x, v[-1])
+	iio.write("-", y)

@@ -1,0 +1,18 @@
+#!/usr/bin/python
+
+def plambda(x, e):
+	a = lambda n : (97 + n).to_bytes().decode()
+	v = "".join([ f"{a(i)}=x[{i}];" for i in range(len(x)) ])
+	exec(f"def f(x): {v} return {e}", globals())
+	return f(x)
+
+if __name__ == "__main__":
+
+	from sys import argv as v
+	assert len(v)==4
+
+	e = v[-1]
+	import iio
+	x = [ iio.read(v[i+1]) for i in range(len(v)-2) ]
+	y = plambda(x, e)
+	iio.write("-", y)

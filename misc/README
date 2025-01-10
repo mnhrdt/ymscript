@@ -1,0 +1,10 @@
+
+
+
+Some "pylambda" implementations, with different characteristics
+
+one_pylambda : single-image "x" with scalar expression support
+
+minipylambda : minimal multi-image "x[0], x[1], etc.", only vector expressions
+
+pylambda : multi-image with "a, b, c, ...", only vector expressions
