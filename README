@@ -13,6 +13,7 @@ Install with "pip install ymscript"
 - qauto : quantize an image to 8 bits
 - sauto : quantize and apply a signed palette
 - vauto : quantize a vector field to rgb
+- translate,rotate,shearx,sheary : resamplers using exact fourier interpolation
 - lap,grad,div : differential operators
 - ntiply : enlarge pixels by an integer factor
 - blur : blur by various kernels (gauss,cauchy,laplace,riesz,disk,square)
