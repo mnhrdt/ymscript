@@ -127,6 +127,21 @@ def sheary(x, a, center=True):
 	y = ifft(Y, axis=0).real                # go back to spatial domain
 	return y
 
+
+#@colorize
+#def zoomin(x, a):
+#	""" zoom-in by zero-padding the spectrum """
+#	assert 2 == len(x.shape)
+#	assert 1 <= a
+#	from numpy import pad, roll
+#	from numpy.fft import fft2, ifft
+#	h,w = x.shape             # shape of the rectangle
+#	X = fft2(x)               # go the the frequency domain
+#	X = roll(X, (h//2,w//2))  #
+#	roll(pad(roll(x,n//2),(0,n)),-(n//2))
+
+
+
 @colorize
 @boundarize
 def rotate(x, a):
@@ -142,6 +157,7 @@ def rotate(x, a):
 	x = sheary(x, -sin(θ)  )
 	x = shearx(x,  tan(θ/2))
 	return x
+
 
 def laplacian(x):
 	""" Compute the five-point laplacian of an image """
