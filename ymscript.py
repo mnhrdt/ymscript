@@ -58,6 +58,90 @@ def qauto(x, q=0.995, i=True, n=True):
 	y = (255*y).astype(uint8)          # rescale and quantize
 	return y
 
+# decorator to "colorize" functions by treating their first argument channelwise
+def colorize(f):
+	def w(x, *a, **k):
+		if len(x.shape) == 3:
+			from numpy import dstack as d
+			return d([w(x[:,:,c],*a,**k)for c in range(x.shape[2])])
+		assert 2 == len(x.shape)
+		return f(x, *a, **k)
+	return w
+
+# decorator to add a boundary condition
+def boundarize(f):
+	def i(x, *a, **k):
+		assert 2 == len(x.shape)
+		if "b" in k:
+			b = k["b"]
+			del k["b"]
+			h,w = x.shape
+			if b == "zero": b = "constant"
+			if b[0] != "p":
+				from numpy import pad, roll
+				X = pad(x, ((0,h),(0,w)), mode=b)
+				Y = roll(X, (h//2,w//2), axis=(0,1))
+				return i(Y, *a, **k)[h//2:h+h//2,w//2:w+w//2]
+		return f(x, *a, **k)
+	return i
+
+@colorize
+@boundarize
+def translate(x, a):
+	from numpy.fft import fft2, ifft2, fftfreq
+	from numpy import meshgrid, exp, pi as π, isscalar
+	if isscalar(a): return translate(x, [a,0])
+	h,w = x.shape                           # shape of the rectangle
+	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+	X = fft2(x)                             # move to frequency domain
+	F = exp(-2j * π * (a[0]*p + a[1]*q))    # filter in frequency domain
+	Y = F*X                                 # apply filter
+	y = ifft2(Y).real                       # go back to spatial domain
+	return y
+
+@colorize
+@boundarize
+def shearx(x, a, center=True):
+	from numpy.fft import fft, ifft, fftfreq
+	from numpy import meshgrid, exp, pi as π, arange
+	h,w = x.shape                           # shape of the rectangle
+	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+	X = fft(x, axis=1)                      # move to frequency domain
+	A = arange(h)*a - center*0.5*a*h        # list of horizontal shifts
+	F = exp(-2j * π * (A * p.T).T)          # filters in frequency domain
+	Y = F*X                                 # apply filter
+	y = ifft(Y, axis=1).real                # go back to spatial domain
+	return y
+
+@colorize
+@boundarize
+def sheary(x, a, center=True):
+	from numpy.fft import fft, ifft, fftfreq
+	from numpy import meshgrid, exp, pi as π, arange
+	h,w = x.shape                           # shape of the rectangle
+	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
+	X = fft(x, axis=0)                      # move to frequency domain
+	A = arange(w)*a - center*0.5*a*w        # list of horizontal shifts
+	F = exp(-2j * π * (A * q))              # filters in frequency domain
+	Y = F*X                                 # apply filter
+	y = ifft(Y, axis=0).real                # go back to spatial domain
+	return y
+
+@colorize
+@boundarize
+def rotate(x, a):
+	from numpy import rot90, sin, tan, pi as π
+	a = a % 360
+	# TODO: these rot90 breaks the center of rotation for
+	# non-square images.  This should be an easy fix...
+	if a >  45 and a <= 135: return rotate(rot90(x,1),a -90)
+	if a > 135 and a <= 225: return rotate(rot90(x,2),a-180)
+	if a > 225 and a <= 315: return rotate(rot90(x,3),a-270)
+	θ = π * a / 180
+	x = shearx(x,  tan(θ/2))
+	x = sheary(x, -sin(θ)  )
+	x = shearx(x,  tan(θ/2))
+	return x
 
 def laplacian(x):
 	""" Compute the five-point laplacian of an image """
@@ -118,8 +202,6 @@ def viewdft(x):
 	return v
 
 
-
-
 def ppsmooth(I):
 	""" Compute the periodic+smooth decomposition of an image """
 	# NOTE: implementation by Jacob Kimmel of Moisan's algorithm
@@ -157,42 +239,6 @@ def ppsmooth(I):
 	p = u - s
 	return p #, s
 
-
-#def blur_gaussian(x, σ):
-#	""" Gaussian blur of an image """
-#	from numpy.fft import fft2, ifft2, fftfreq
-#	from numpy import meshgrid, exp
-#	h,w = x.shape                           # shape of the rectangle
-#	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
-#	X = fft2(x)                             # move to frequency domain
-#	F = exp(-σ**2 * (p**2 + q**2))          # define filter
-#	Y = F*X                                 # apply filter
-#	y = ifft2(Y).real                       # go back to spatial domain
-#	return y
-
-#def blur_laplace(x, σ):
-#	""" Laplacian blur of an image """
-#	from numpy.fft import fft2, ifft2, fftfreq
-#	from numpy import meshgrid, exp
-#	h,w = x.shape                           # shape of the rectangle
-#	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
-#	X = fft2(x)                             # move to frequency domain
-#	F = exp(-σ**2 * (p**2 + q**2))          # define filter
-#	Y = F*X                                 # apply filter
-#	y = ifft2(Y).real                       # go back to spatial domain
-#	return y
-
-#def blur_riesz(x, σ):
-#	""" Riesz blur of an image """
-#	from numpy.fft import fft2, ifft2, fftfreq
-#	from numpy import meshgrid, exp
-#	h,w = x.shape                           # shape of the rectangle
-#	p,q = meshgrid(fftfreq(w), fftfreq(h))  # build frequency abscissae
-#	X = fft2(x)                             # move to frequency domain
-#	F = exp(-σ**2 * (p**2 + q**2))          # define filter
-#	Y = F*X                                 # apply filter
-#	y = ifft2(Y).real                       # go back to spatial domain
-#	return y
 
 def __build_kernel_freq(s, σ, p, q):
 	from numpy import exp, sinc, fabs, fmax
@@ -254,7 +300,7 @@ def blur(x, k, σ, b="periodic"):
 	if b == "zero": b = "constant"
 	if b[0] != "p":
 		from numpy import pad
-		return blur(pad(x,((0,w),(0,h)),mode=b),k,σ,b="p")[:h,:w]
+		return blur(pad(x,((0,h),(0,w)),mode=b),k,σ,b="p")[:h,:w]
 
 	# base case with d=1 and periodic boundary
 	from numpy.fft import fft2, ifft2, fftfreq
@@ -277,7 +323,8 @@ def plambda(x, e):
 
 # visible API
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
-	   "blur", "ntiply", "ppsmooth", "plambda" ]
+	   "blur", "ntiply", "ppsmooth", "plambda",
+	   "rotate", "translate", "shearx", "sheary" ]
 
 
 # cli interfaces to the above functions
@@ -298,6 +345,22 @@ if __name__ == "__main__":
 		s = pick_option("-s", 3.0)
 		b = pick_option("-b", "periodic")
 		y = blur(x, k, s, b)
+	if "rotate" == v[1]:
+		a = pick_option("-a", 10)
+		b = pick_option("-b", "wrap")
+		y = rotate(x, a, b=b)
+	if "shearx" == v[1]:
+		a = pick_option("-a", 10)
+		b = pick_option("-b", "wrap")
+		y = shearx(x, a, b=b)
+	if "sheary" == v[1]:
+		a = pick_option("-a", 10)
+		b = pick_option("-b", "wrap")
+		y = sheary(x, a, b=b)
+	if "translate" == v[1]:
+		a = pick_option("-a", 10)
+		b = pick_option("-b", "wrap")
+		y = translate(x, a, b=b)
 	if "laplacian" == v[1]:
 		y = laplacian(x)
 	if "gradient" == v[1]:
@@ -328,4 +391,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 11
+version = 12
