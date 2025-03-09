@@ -14,7 +14,8 @@ Install with "pip install ymscript"
 - sauto : quantize and apply a signed palette
 - vauto : quantize a vector field to rgb
 - translate,rotate,shearx,sheary : resamplers using exact fourier interpolation
-- lap,grad,div : differential operators
+- zoomin, zoomout : rescalers with various techniques
+- lap,grad,div : differential operators (by finite differences)
 - ntiply : enlarge pixels by an integer factor
 - blur : blur by various kernels (gauss,cauchy,laplace,riesz,disk,square)
 - laplace : smooth interpolation

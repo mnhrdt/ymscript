@@ -128,18 +128,30 @@ def sheary(x, a, center=True):
 	return y
 
 
-#@colorize
-#def zoomin(x, a):
-#	""" zoom-in by zero-padding the spectrum """
-#	assert 2 == len(x.shape)
-#	assert 1 <= a
-#	from numpy import pad, roll
-#	from numpy.fft import fft2, ifft
-#	h,w = x.shape             # shape of the rectangle
-#	X = fft2(x)               # go the the frequency domain
-#	X = roll(X, (h//2,w//2))  #
-#	roll(pad(roll(x,n//2),(0,n)),-(n//2))
+@colorize
+def zoomin(x, a):
+	""" zoom-in by zero-padding the spectrum """
+	assert 2 == len(x.shape)
+	assert 1 <= a
+	from numpy import pad, roll
+	from numpy.fft import fft2, ifft2
+	h,w = x.shape                              # shape of the rectangle
+	H = round(a*h)                             # new height
+	W = round(a*w)                             # new width
+	X = fft2(x)                                # go the the frequency domain
+	X = roll(X, (h//2,w//2), axis=(0,1))       # fftshift
+	X = pad(X, ((0,H-h),(0,W-w)) )             # zero-pad
+	X = roll(X, (-(h//2),-(w//2)), axis=(0,1)) # inverse fftshift
+	y = ifft2(X).real                          # back to pixel domain
+	return y*(W*1.0/w)*(H*1.0/h)               # rescale to same avg
 
+
+
+# TODO:
+# noise generators
+# palettes for qauto/sauto ?
+# viewflow and friends
+# homwarp
 
 
 @colorize
@@ -340,7 +352,7 @@ def plambda(x, e):
 # visible API
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
-	   "rotate", "translate", "shearx", "sheary" ]
+	   "rotate", "translate", "shearx", "sheary", "zoomin" ]
 
 
 # cli interfaces to the above functions
@@ -365,6 +377,9 @@ if __name__ == "__main__":
 		a = pick_option("-a", 10)
 		b = pick_option("-b", "wrap")
 		y = rotate(x, a, b=b)
+	if "zoomin" == v[1]:
+		a = pick_option("-a", 2**.5)
+		y = zoomin(x, a)
 	if "shearx" == v[1]:
 		a = pick_option("-a", 10)
 		b = pick_option("-b", "wrap")
@@ -407,4 +422,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 12
+version = 13
