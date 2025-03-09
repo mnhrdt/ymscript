@@ -18,6 +18,8 @@ Install with "pip install ymscript"
 - lap,grad,div : differential operators (by finite differences)
 - ntiply : enlarge pixels by an integer factor
 - blur : blur by various kernels (gauss,cauchy,laplace,riesz,disk,square)
+- gauss : blur using the gaussian semigroup
+- riesz : riesz semigroup
 - laplace : smooth interpolation
 - poisson : poisson editing
 
