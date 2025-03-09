@@ -341,6 +341,16 @@ def blur(x, k, σ, b="periodic"):
 	return y
 
 
+def gauss(x, σ, b="periodic"):
+	""" Gaussian blur semigroup """
+	return blur(x, "gaussian", σ, b=b)
+
+
+def riesz(x, σ, b="periodic"):
+	""" Riesz semigroup """
+	return blur(x, "riesz", σ, b=b)
+
+
 def plambda(x, e):
 	""" Apply an expression to an image """
 	exec(f"def f(x): return {e}", globals())
@@ -352,7 +362,8 @@ def plambda(x, e):
 # visible API
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
-	   "rotate", "translate", "shearx", "sheary", "zoomin" ]
+	   "rotate", "translate", "shearx", "sheary", "zoomin",
+	   "gauss", "riesz" ]
 
 
 # cli interfaces to the above functions
@@ -373,6 +384,14 @@ if __name__ == "__main__":
 		s = pick_option("-s", 3.0)
 		b = pick_option("-b", "periodic")
 		y = blur(x, k, s, b)
+	if "gauss" == v[1]:
+		s = pick_option("-s", 3.0)
+		b = pick_option("-b", "periodic")
+		y = gauss(x, s, b)
+	if "riesz" == v[1]:
+		s = pick_option("-s", 1.0)
+		b = pick_option("-b", "periodic")
+		y = riesz(x, s, b)
 	if "rotate" == v[1]:
 		a = pick_option("-a", 10)
 		b = pick_option("-b", "wrap")
@@ -422,4 +441,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 13
+version = 14
