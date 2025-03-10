@@ -393,22 +393,25 @@ if __name__ == "__main__":
 		b = pick_option("-b", "periodic")
 		y = riesz(x, s, b)
 	if "rotate" == v[1]:
-		a = pick_option("-a", 10)
+		a = pick_option("-a", 10.0)
 		b = pick_option("-b", "wrap")
 		y = rotate(x, a, b=b)
 	if "zoomin" == v[1]:
 		a = pick_option("-a", 2**.5)
 		y = zoomin(x, a)
 	if "shearx" == v[1]:
-		a = pick_option("-a", 10)
+		a = pick_option("-a", 10.0)
 		b = pick_option("-b", "wrap")
 		y = shearx(x, a, b=b)
 	if "sheary" == v[1]:
-		a = pick_option("-a", 10)
+		a = pick_option("-a", 10.0)
 		b = pick_option("-b", "wrap")
 		y = sheary(x, a, b=b)
 	if "translate" == v[1]:
-		a = pick_option("-a", 10)
+		a = pick_option("-a", 10.0)
+		dx = pick_option("-x", 0.0)
+		dy = pick_option("-y", 0.0)
+		if dx or dy: a = (dx,dy)
 		b = pick_option("-b", "wrap")
 		y = translate(x, a, b=b)
 	if "laplacian" == v[1]:
