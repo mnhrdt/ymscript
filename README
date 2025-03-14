@@ -15,6 +15,8 @@ Install with "pip install ymscript"
 - vauto : quantize a vector field to rgb
 - translate,rotate,shearx,sheary : resamplers using exact fourier interpolation
 - zoomin, zoomout : rescalers with various techniques
+- random : random images of various distributions
+- backflow : warp an image by a vector field
 - lap,grad,div : differential operators (by finite differences)
 - ntiply : enlarge pixels by an integer factor
 - blur : blur by various kernels (gauss,cauchy,laplace,riesz,disk,square)
@@ -33,6 +35,9 @@ The differential operators require imgra.
 The blur requires numpy.fft
 
 Poisson editing requires imgra and scipy.linalg
+
+Suggestion: for shell use, do alias y="python `locate ymscript.py`" and then
+cat lena.png | y blur | y laplacian | ...
 
 
 RELEASING

@@ -168,6 +168,77 @@ def zoomout(x, a):
 
 
 
+__global_random = 0
+def random(s, d):
+	""" fill an image of shape s with i.i.d. pixels of distribution d """
+	import numpy
+	global __global_random
+	if not __global_random:
+		__global_random = numpy.random.default_rng(0)
+	if isinstance(s, numpy.ndarray):
+		s = s.shape
+	r = __global_random
+	if d == "gaussian" or d == "normal" or d == "g":
+		return r.standard_normal(s)
+	if d == "uniform" or d == "u":
+		return r.uniform(size=s)
+	if d == "cauchy" or d == "c":
+		return r.standard_cauchy(s)
+	assert False
+
+@colorize
+def backflow(x, F):
+	""" warp an image x by a vector field F """
+	print(f"F.shape={F.shape}")
+	print(f"x.shape={x.shape}")
+	assert len(x.shape) == 2
+	assert len(F.shape) == 3
+	assert F.shape[2] == 2
+	assert F.shape[0] == x.shape[0]
+	assert F.shape[1] == x.shape[1]
+	from numpy import meshgrid, arange
+	h,w = x.shape
+	i,j = meshgrid(arange(w),arange(h))
+	p,q = i+F[:,:,0],j+F[:,:,1]
+	from scipy.ndimage import map_coordinates
+	y = map_coordinates(x, (q,p))
+	return y
+	#ip = clip(floor(p).astype(int), 0, w-1)
+	#iq = clip(floor(q).astype(int), 0, h-1)
+	#fp = p - ip
+	#fq = q - iq
+	#print(f"type(ip)={type(ip[0,0])}")
+	#iio.write("/tmp/p.npy", p)
+	#iio.write("/tmp/q.npy", q)
+	#iio.write("/tmp/ip.npy", ip)
+	#iio.write("/tmp/iq.npy", iq)
+	#iio.write("/tmp/fp.npy", fp)
+	#iio.write("/tmp/fq.npy", fq)
+	#
+	# Question: why not use scipy's interpolator?
+	# Answer: https://github.com/scipy/scipy/issues/18010
+	#from scipy.interpolate import RegularGridInterpolator
+	#f = RegularGridInterpolator((i,j), x)
+	#y = f((p,q))
+	#
+	#def bicubic(v0, v1, v2, v3, x):
+	#	return v1 + 0.5 * x*(v2 - v0
+	#		+ x*(2*v0 - 5*v1 + 4*v2 - v3
+	#		+ x*(3*(v1 - v2) + v3 - v0)))
+	#def bicubic_cell(p0, p1, p2, p3,
+	#		 p4, p5, p6, p7,
+	#		 p8, p9, pa, pb,
+	#		 pc, pd, pe, pf,    x, y):
+	#	v0   = bicubic(p0, p1, p2, p3, y)
+	#	v1   = bicubic(p4, p5, p6, p7, y)
+	#	v2   = bicubic(p8, p9, pa, pb, y)
+	#	v3   = bicubic(pc, pd, pe, pf, y)
+	#	return bicubic(v0, v1, v2, v3, x)
+	#y = x[(iq,ip)]
+	#
+
+
+
 # TODO:
 # noise generators
 # palettes for qauto/sauto ?
@@ -384,7 +455,7 @@ def plambda(x, e):
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
 	   "rotate", "translate", "shearx", "sheary", "zoomin", "zoomout",
-	   "gauss", "riesz" ]
+	   "gauss", "riesz", "random", "backflow" ]
 
 
 # cli interfaces to the above functions
@@ -438,6 +509,13 @@ if __name__ == "__main__":
 		if dx or dy: a = (dx,dy)
 		b = pick_option("-b", "wrap")
 		y = translate(x, a, b=b)
+	if "random" == v[1]:
+		d = pick_option("-d", "uniform")
+		y = random(x, d)
+	if "backflow" == v[1]:
+		F = x
+		x = iio.read(pick_option("-x", "-"))
+		y = backflow(x, F)
 	if "laplacian" == v[1]:
 		y = laplacian(x)
 	if "gradient" == v[1]:
@@ -468,4 +546,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 15
+version = 16
