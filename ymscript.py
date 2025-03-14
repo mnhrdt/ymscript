@@ -142,6 +142,27 @@ def zoomin(x, a):
 	X = roll(X, (h//2,w//2), axis=(0,1))       # fftshift
 	X = pad(X, ((0,H-h),(0,W-w)) )             # zero-pad
 	X = roll(X, (-(h//2),-(w//2)), axis=(0,1)) # inverse fftshift
+	assert X.shape == (H,W)
+	y = ifft2(X).real                          # back to pixel domain
+	return y*(W*1.0/w)*(H*1.0/h)               # rescale to same avg
+
+@colorize
+def zoomout(x, a):
+	""" zoom-out by spectral cutoff """
+	assert 2 == len(x.shape)
+	assert 1 >= a
+	from numpy import pad, roll
+	from numpy.fft import fft2, ifft2
+	h,w = x.shape                              # shape of the rectangle
+	H = round(h*a)                             # new height
+	W = round(w*a)                             # new width
+	X = fft2(x)                                # go the the frequency domain
+	X = roll(X, (h//2,w//2), axis=(0,1))       # fftshift
+	ht,wt = (h-H)//2, (w-W)//2                 # compute trim sizes
+	X = X[ht:-(h-H)//2,wt:-(w-W)//2]           # do the trim
+	# TODO: rewrite cleaner, better centering odd/even case
+	assert X.shape == (H,W)
+	X = roll(X, (-(h//2-ht),-(w//2-wt)), axis=(0,1))  # ifftshift
 	y = ifft2(X).real                          # back to pixel domain
 	return y*(W*1.0/w)*(H*1.0/h)               # rescale to same avg
 
@@ -362,7 +383,7 @@ def plambda(x, e):
 # visible API
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
-	   "rotate", "translate", "shearx", "sheary", "zoomin",
+	   "rotate", "translate", "shearx", "sheary", "zoomin", "zoomout",
 	   "gauss", "riesz" ]
 
 
@@ -399,6 +420,9 @@ if __name__ == "__main__":
 	if "zoomin" == v[1]:
 		a = pick_option("-a", 2**.5)
 		y = zoomin(x, a)
+	if "zoomout" == v[1]:
+		a = pick_option("-a", 2**-.5)
+		y = zoomout(x, a)
 	if "shearx" == v[1]:
 		a = pick_option("-a", 10.0)
 		b = pick_option("-b", "wrap")
@@ -444,4 +468,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 14
+version = 15
