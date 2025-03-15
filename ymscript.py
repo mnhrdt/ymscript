@@ -19,7 +19,7 @@ def sauto(x, q=0.995):
 	return c
 
 
-def qauto(x, q=0.995, i=True, n=True)
+def qauto(x, q=0.995, i=True, n=True):
 	"""
 	quantize a floating-point image to 8 bits per channel
 
@@ -560,4 +560,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 18
+version = 19
