@@ -19,7 +19,7 @@ def sauto(x, q=0.995):
 	return c
 
 
-def qauto(x, q=0.995, i=True, n=True):
+def qauto(x, q=0.995, i=True, n=True)
 	"""
 	quantize a floating-point image to 8 bits per channel
 
@@ -202,8 +202,6 @@ def randc(s):
 @colorize
 def backflow(x, F):
 	""" warp an image x by a vector field F """
-	print(f"F.shape={F.shape}")
-	print(f"x.shape={x.shape}")
 	assert len(x.shape) == 2
 	assert len(F.shape) == 3
 	assert F.shape[2] == 2
@@ -562,4 +560,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 17
+version = 18
