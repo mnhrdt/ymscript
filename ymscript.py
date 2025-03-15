@@ -186,6 +186,19 @@ def random(s, d):
 		return r.standard_cauchy(s)
 	assert False
 
+def randu(s):
+	""" fill an image of shape s with i.i.d. uniform noise """
+	return random(s, "uniform")
+
+def randg(s):
+	""" fill an image of shape s with i.i.d. gaussian noise """
+	return random(s, "gaussian")
+
+def randc(s):
+	""" fill an image of shape s with i.i.d. cauchy noise """
+	return random(s, "cauchy")
+
+
 @colorize
 def backflow(x, F):
 	""" warp an image x by a vector field F """
@@ -455,7 +468,7 @@ def plambda(x, e):
 __all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
 	   "rotate", "translate", "shearx", "sheary", "zoomin", "zoomout",
-	   "gauss", "riesz", "random", "backflow" ]
+	   "gauss", "riesz", "random", "backflow", "randu", "randg", "randc" ]
 
 
 # cli interfaces to the above functions
@@ -512,6 +525,9 @@ if __name__ == "__main__":
 	if "random" == v[1]:
 		d = pick_option("-d", "uniform")
 		y = random(x, d)
+	if "randu" == v[1]: y = randu(x)
+	if "randg" == v[1]: y = randg(x)
+	if "randc" == v[1]: y = randc(x)
 	if "backflow" == v[1]:
 		F = x
 		x = iio.read(pick_option("-x", "-"))
@@ -546,4 +562,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 16
+version = 17
