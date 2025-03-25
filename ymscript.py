@@ -286,6 +286,17 @@ def laplacian(x):
 	y = L @ x.flatten()           # laplacian of flattened data
 	return y.reshape(*s)          # reshape and return
 
+def laplacianp(x):
+	""" Compute the five-point laplacian of an image, periodic boundary """
+	if len(x.shape)==3:
+		from numpy import dstack as d
+		return d([ laplacianp(x[:,:,c]) for c in range(x.shape[2]) ])
+	import imgra                  # image processing with graphs
+	s = x.shape                   # shape of the domain
+	B = imgra.pgrid_incidence(*s)  # discrete gradient operator
+	L = -B.T @ B                  # laplacian operator
+	y = L @ x.flatten()           # laplacian of flattened data
+	return y.reshape(*s)          # reshape and return
 
 def gradient(x):
 	""" Compute the gradient by forward-differences """
@@ -316,6 +327,7 @@ def divergence(x):
 	g = x[:-1,:,1].flatten()
 	from numpy import hstack
 	return ( B.T @ hstack([-f,-g]) ).reshape(h,w)
+
 
 
 
@@ -463,7 +475,8 @@ def plambda(x, e):
 
 
 # visible API
-__all__ = [ "sauto", "qauto", "laplacian", "gradient", "divergence",
+__all__ = [ "sauto", "qauto",
+	   "laplacian", "laplacianp", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
 	   "rotate", "translate", "shearx", "sheary", "zoomin", "zoomout",
 	   "gauss", "riesz", "random", "backflow", "randu", "randg", "randc" ]
@@ -530,12 +543,10 @@ if __name__ == "__main__":
 		F = x
 		x = iio.read(pick_option("-x", "-"))
 		y = backflow(x, F)
-	if "laplacian" == v[1]:
-		y = laplacian(x)
-	if "gradient" == v[1]:
-		y = gradient(x)
-	if "divergence" == v[1]:
-		y = divergence(x)
+	if "laplacian" == v[1]: y = laplacian(x)
+	if "laplacianp" == v[1]: y = laplacianp(x)
+	if "gradient" == v[1]: y = gradient(x)
+	if "divergence" == v[1]: y = divergence(x)
 	if "qauto" == v[1]:
 		q = pick_option("-q", 0.995)
 		s = pick_option("-s", True)
@@ -560,4 +571,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 19
+version = 21

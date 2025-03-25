@@ -3,12 +3,12 @@ import setuptools
 
 setuptools.setup(
 	name = "ymscript",
-	version = "19",
+	version = "21",
 	description = "Image Processing Scripts",
-	url="https://git.sr.ht/~coco/ymscript",
+	url = "https://git.sr.ht/~coco/ymscript",
+	license = "AGPL-3.0",
 	classifiers = [
 		"Operating System :: OS Independent",
-		"License :: OSI Approved :: GNU Affero General Public License v3",
 		"Topic :: Scientific/Engineering :: Image Processing",
 		"Topic :: Scientific/Engineering :: Mathematics"
 		],
