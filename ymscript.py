@@ -186,6 +186,12 @@ def random(s, d):
 		return r.standard_cauchy(s)
 	assert False
 
+def srand(a):
+	""" seed the random number generator """
+	import numpy
+	global __global_random
+	__global_random = numpy.random.default_rng(a)
+
 def randu(s):
 	""" fill an image of shape s with i.i.d. uniform noise """
 	return random(s, "uniform")
@@ -479,7 +485,8 @@ __all__ = [ "sauto", "qauto",
 	   "laplacian", "laplacianp", "gradient", "divergence",
 	   "blur", "ntiply", "ppsmooth", "plambda",
 	   "rotate", "translate", "shearx", "sheary", "zoomin", "zoomout",
-	   "gauss", "riesz", "random", "backflow", "randu", "randg", "randc" ]
+	   "gauss", "riesz", "random", "backflow", "randu", "randg", "randc",
+	   "srand" ]
 
 
 # cli interfaces to the above functions
@@ -571,4 +578,4 @@ if __name__ == "__main__":
 
 
 # API
-version = 21
+version = 22
